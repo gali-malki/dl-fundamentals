@@ -14,17 +14,21 @@ if __name__ == "__main__":
     print("Torch CUDA available?", torch.cuda.is_available())
 
     torch.manual_seed(123)
-
+    # Initialize the Ames Housing Data Module
     dm = AmesHousingDataModule()
 
+    # Initialize a PyTorch MLP (Multi-Layer Perceptron) model with 3 features
     pytorch_model = PyTorchMLP(num_features=3)
 
+    # Wrap the PyTorch model in a PyTorch Lightning wrapper for training
     lightning_model = LightningModel(model=pytorch_model, learning_rate=0.001)
 
+    # Configure the PyTorch Lightning trainer
     trainer = L.Trainer(
         max_epochs=30, accelerator="cpu", devices=1, deterministic=True,
         logger=CSVLogger(save_dir="logs/", name="my-model"),
     )
+    # start training the model
     trainer.fit(model=lightning_model, datamodule=dm)
 
     train_mse = trainer.validate(dataloaders=dm.train_dataloader())[0]["val_mse"]

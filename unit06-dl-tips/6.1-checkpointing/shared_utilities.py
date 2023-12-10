@@ -1,4 +1,4 @@
-import lightning as L
+import pytorch_lightning as L
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

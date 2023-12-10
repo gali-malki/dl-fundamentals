@@ -1,27 +1,36 @@
-# Solution - Tiny ImageNet
+# Exercise 1: ImageNet Classification
 
-## Code
-* `local_utilities.py`: contains the DataModule for Tiny ImageNet and other utility functions. It assumes Tiny ImageNet dataset has been downloaded and put in the './tiny-imagenet-200' directory.
-* `training.py`: the main python code that trains the models.
-* `tiny-imagenet-resnet.ipynb`: the utility notebook that sanity checks the dataset, plots training/validation loss/accuracy curves, and tests the trained models against test set.
 
-## Models
-We trained all variants of vanilla resnet available on torch hub (resnet18, resnet34, resnet50, resnet101, resnet152). For each model variant, a baseline model was trained without data augementation and an enhanced model was trained by applying the image augmentation techniques from section 7.5. On a Google Cloud virtual machine with a single NVIDIA V100 GPU, it took about 60 hours to train all 10 models.
 
-## Result
-The best performing model was resnet50 with data augmentaion applied, which achieved 53.5% test accuracy.
+In this exercise, we are going to train a classifier on the the ImageNet dataset. In particular, we will be using the Large Scale Visual Recognition Challenge (ILSVRC) 2012 image classification dataset of ImageNet, which is one of the most widely used subsets. 
 
-### Test accuracy
-| Baseline Model Name | Test Accuracy | Augmented Model Name | Test Accuracy |
-| ------ | ----- | ----- | ----- |
-| tiny-imagenet-resnet18-baseline | 0.4458000063896179 | tiny-imagenet-resnet18-augmented | 0.5205000042915344 |
-| tiny-imagenet-resnet34-baseline | 0.4474000036716461 | tiny-imagenet-resnet34-augmented | 0.5231000185012817 |
-| tiny-imagenet-resnet50-baseline | 0.4223000109195709 | tiny-imagenet-resnet50-augmented | **0.5349000096321106** |
-| tiny-imagenet-resnet101-baseline | 0.43290001153945923 | tiny-imagenet-resnet101-augmented | 0.5210999846458435 |
-| tiny-imagenet-resnet152-baseline | 0.4162999987602234 | tiny-imagenet-resnet152-augmented | 0.524399995803833 |
 
-### Training/validation accuracy
-![Training/validation accuracy](images/tiny-imagenet-all-acc.png)
 
-### Training/validation loss
-![Training/validation loss](images/tiny-imagenet-all-loss.png)
+
+First, you need to go to the official ImageNet website, [https://image-net.org/](https://image-net.org/) and register for a free account.
+
+Next, you can go to the download page ([https://image-net.org/challenges/LSVRC/2012/2012-downloads.php](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)) and download the training, validation, and test sets (make sure you have enough disk space available).
+
+- ILSVRC2012_img_train.tar (about 138 GB)
+- ILSVRC2012_img_val.tar (about 6.3 GB)
+- ILSVRC2012_img_test.tar (about 13 GB)
+
+
+![imagenet-download](images/imagenet-download.png)
+
+Next, unzip the files, develop a custom dataset class, and train a ResNet-52 model
+
+
+
+## Tiny ImageNet
+
+Since the dataset size above is prohibitive for most people, consider the alternative Tiny ImageNet alternative from [https://www.kaggle.com/competitions/tiny-imagenet/data](https://www.kaggle.com/competitions/tiny-imagenet/data) for the MicroImageNet Challenge
+
+> MicroImageNet classification challenge is similar to the classification challenge in the full ImageNet [ILSVRC](http://www.image-net.org/challenges/LSVRC/2012/index). MicroImageNet contains 200 classes for training. Each class has 500 images. The test set contains 10,000 images. All images are 64x64 colored ones.
+>
+> Your objective is to classify the 10,000 test set as accurately as possible.
+
+You can download the 500 Mb dataset from here: [https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet](https://www.kaggle.com/datasets/akash2sharma/tiny-imagenet)
+
+![tiny-download](images/tiny-download.png)
+
