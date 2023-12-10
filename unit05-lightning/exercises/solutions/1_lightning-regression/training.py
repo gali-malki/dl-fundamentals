@@ -9,12 +9,11 @@ from shared_utilities import LightningModel, AmesHousingDataModule, PyTorchMLP
 from watermark import watermark
 
 if __name__ == "__main__":
-
+    
     print(watermark(packages="torch,lightning", python=True))
     print("Torch CUDA available?", torch.cuda.is_available())
 
     torch.manual_seed(123)
-
     dm = AmesHousingDataModule()
 
     pytorch_model = PyTorchMLP(num_features=3)
@@ -48,10 +47,8 @@ for i, dfg in metrics.groupby(agg_col):
 
 df_metrics = pd.DataFrame(aggreg_metrics)
 df_metrics[["train_loss", "val_loss"]].plot(
-    grid=True, legend=True, xlabel="Epoch", ylabel="Loss"
-)
+    grid=True, legend=True, xlabel="Epoch", ylabel="Loss")
 df_metrics[["train_mse", "val_mse"]].plot(
-    grid=True, legend=True, xlabel="Epoch", ylabel="MSE"
-)
+    grid=True, legend=True, xlabel="Epoch", ylabel="MSE")
 
 plt.show()

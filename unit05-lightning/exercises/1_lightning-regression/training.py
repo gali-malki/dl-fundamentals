@@ -1,9 +1,14 @@
 # Unit 5.5. Organizing Your Data Loaders with Data Modules
 
-import lightning as L
+import pytorch_lightning as L
+from pytorch_lightning.loggers import CSVLogger
+import matplotlib.pyplot as plt
+import pandas as pd
 import torch
-from shared_utilities import LightningModel, MNISTDataModule, PyTorchMLP
+from shared_utilities import LightningModel, AmesHousingDataModule, PyTorchMLP
 from watermark import watermark
+
+# Unit 5.5. Organizing Your Data Loaders with Data Modules
 
 if __name__ == "__main__":
 
@@ -12,22 +17,41 @@ if __name__ == "__main__":
 
     torch.manual_seed(123)
 
-    dm = MNISTDataModule()
+    dm = AmesHousingDataModule()
 
-    pytorch_model = PyTorchMLP(num_features=784, num_classes=10)
+    pytorch_model = PyTorchMLP(num_features=3)
 
-    lightning_model = LightningModel(model=pytorch_model, learning_rate=0.05)
+    lightning_model = LightningModel(model=pytorch_model, learning_rate=0.001)
 
     trainer = L.Trainer(
-        max_epochs=10, accelerator="cpu", devices="auto", deterministic=True
+        max_epochs=30, accelerator="cpu", devices=1, deterministic=True,
+        logger=CSVLogger(save_dir="logs/", name="my-model"),
     )
     trainer.fit(model=lightning_model, datamodule=dm)
 
-    train_acc = trainer.validate(dataloaders=dm.train_dataloader())[0]["val_acc"]
-    val_acc = trainer.validate(datamodule=dm)[0]["val_acc"]
-    test_acc = trainer.test(datamodule=dm)[0]["test_acc"]
+    train_mse = trainer.validate(dataloaders=dm.train_dataloader())[0]["val_mse"]
+    val_mse = trainer.validate(datamodule=dm)[0]["val_mse"]
+    test_mse = trainer.test(datamodule=dm)[0]["test_mse"]
     print(
-        f"Train Acc {train_acc*100:.2f}%"
-        f" | Val Acc {val_acc*100:.2f}%"
-        f" | Test Acc {test_acc*100:.2f}%"
+        f"Train MSE {train_mse:.2f}"
+        f" | Val MSE {val_mse:.2f}"
+        f" | Test MSE {test_mse:.2f}"
     )
+
+metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+
+aggreg_metrics = []
+agg_col = "epoch"
+for i, dfg in metrics.groupby(agg_col):
+    agg = dict(dfg.mean())
+    agg[agg_col] = i
+    aggreg_metrics.append(agg)
+
+df_metrics = pd.DataFrame(aggreg_metrics)
+df_metrics[["train_loss", "val_loss"]].plot(
+    grid=True, legend=True, xlabel="Epoch", ylabel="Loss"
+)
+df_metrics[["train_mse", "val_mse"]].plot(
+    grid=True, legend=True, xlabel="Epoch", ylabel="MSE"
+)
+plt.show()

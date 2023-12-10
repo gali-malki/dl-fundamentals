@@ -1,4 +1,5 @@
-import lightning as L
+import os
+import pytorch_lightning as L
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -11,23 +12,20 @@ from torchvision import datasets, transforms
 
 
 class PyTorchMLP(torch.nn.Module):
-    def __init__(self, num_features, num_classes):
+    def __init__(self, num_features):
         super().__init__()
 
         self.all_layers = torch.nn.Sequential(
             # 1st hidden layer
-            torch.nn.Linear(num_features, 50),
-            torch.nn.ReLU(),
-            # 2nd hidden layer
-            torch.nn.Linear(50, 25),
+            torch.nn.Linear(num_features, 10),
             torch.nn.ReLU(),
             # output layer
-            torch.nn.Linear(25, num_classes),
+            torch.nn.Linear(10, 1),
         )
 
     def forward(self, x):
-        x = torch.flatten(x, start_dim=1)
-        logits = self.all_layers(x)
+        #x = torch.flatten(x, start_dim=1)
+        logits = torch.flatten(self.all_layers(x))
         return logits
 
 
@@ -38,9 +36,9 @@ class LightningModel(L.LightningModule):
         self.learning_rate = learning_rate
         self.model = model
 
-        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-        self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+        self.train_mse = torchmetrics.MeanSquaredError()
+        self.val_mse = torchmetrics.MeanSquaredError()
+        self.test_mse = torchmetrics.MeanSquaredError()
 
     def forward(self, x):
         return self.model(x)
@@ -49,31 +47,31 @@ class LightningModel(L.LightningModule):
         features, true_labels = batch
         logits = self(features)
 
-        loss = F.cross_entropy(logits, true_labels)
-        predicted_labels = torch.argmax(logits, dim=1)
-        return loss, true_labels, predicted_labels
+        loss = F.mse_loss(logits, true_labels)
+        # predicted_labels = torch.argmax(logits, dim=1)
+        return loss, true_labels, logits
 
     def training_step(self, batch, batch_idx):
         loss, true_labels, predicted_labels = self._shared_step(batch)
 
         self.log("train_loss", loss)
-        self.train_acc(predicted_labels, true_labels)
+        self.train_mse(predicted_labels, true_labels)
         self.log(
-            "train_acc", self.train_acc, prog_bar=True, on_epoch=True, on_step=False
+            "train_mse", self.train_mse, prog_bar=True, on_epoch=True, on_step=False
         )
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, true_labels, predicted_labels = self._shared_step(batch)
+        loss, true_labels, predictions = self._shared_step(batch)
 
         self.log("val_loss", loss, prog_bar=True)
-        self.val_acc(predicted_labels, true_labels)
-        self.log("val_acc", self.val_acc, prog_bar=True)
+        self.val_mse(predictions, true_labels)
+        self.log("val_mse", self.val_mse, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
-        _, true_labels, predicted_labels = self._shared_step(batch)
-        self.test_acc(predicted_labels, true_labels)
-        self.log("test_acc", self.test_acc)
+        loss, true_labels, predictions = self._shared_step(batch)
+        self.test_mse(predictions, true_labels)
+        self.log("test_mse", self.test_mse)
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate)
@@ -81,7 +79,7 @@ class LightningModel(L.LightningModule):
 
 
 class MNISTDataModule(L.LightningDataModule):
-    def __init__(self, data_dir="./mnist", batch_size=64):
+    def __init__(self, data_dir="./data", batch_size=64):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -168,7 +166,7 @@ class AmesHousingDataModule(L.LightningDataModule):
 
     def setup(self, stage: str):
         all_data = AmesHousingDataset(csv_path='AmesHousing.txt')
-        temp, self.val = random_split(all_data, [2500, 429], 
+        temp, self.val = random_split(all_data, [2500, 429],
                                       torch.Generator().manual_seed(1))
         self.train, self.test = random_split(temp, [2000, 500],
                                              torch.Generator().manual_seed(1))
