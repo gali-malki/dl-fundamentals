@@ -36,18 +36,14 @@ if __name__ == "__main__":
         f" | Test MSE {test_mse:.2f}"
     )
 
-# Load metrics from a CSV file
 metrics_path = f"{trainer.logger.log_dir}/metrics.csv"
 metrics_df = pd.read_csv(metrics_path)
 
-# Aggregate metrics by epoch and calculate the mean for each epoch
 epoch_aggregated = metrics_df.groupby("epoch").mean().reset_index()
 
-# Plot training and validation loss
 epoch_aggregated.plot(x="epoch", y=["train_loss", "val_loss"],
                       grid=True, legend=True, xlabel="Epoch", ylabel="Loss")
 
-# Plot training and validation mean squared error (MSE)
 epoch_aggregated.plot(x="epoch", y=["train_mse", "val_mse"],
                       grid=True, legend=True, xlabel="Epoch", ylabel="MSE")
 
